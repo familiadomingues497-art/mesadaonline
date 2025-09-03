@@ -14,13 +14,319 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daughters: {
+        Row: {
+          id: string
+          monthly_allowance_cents: number
+          rewards_enabled: boolean | null
+        }
+        Insert: {
+          id: string
+          monthly_allowance_cents?: number
+          rewards_enabled?: boolean | null
+        }
+        Update: {
+          id?: string
+          monthly_allowance_cents?: number
+          rewards_enabled?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daughters_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_daughters_profile"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      families: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          family_id: string
+          id: string
+          phone: string | null
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          family_id: string
+          id: string
+          phone?: string | null
+          role: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          family_id?: string
+          id?: string
+          phone?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          created_at: string
+          family_id: string
+          id: string
+          penalty_on_miss: boolean | null
+          reminder_whatsapp: boolean | null
+          weekly_close_weekday: number | null
+        }
+        Insert: {
+          created_at?: string
+          family_id: string
+          id?: string
+          penalty_on_miss?: boolean | null
+          reminder_whatsapp?: boolean | null
+          weekly_close_weekday?: number | null
+        }
+        Update: {
+          created_at?: string
+          family_id?: string
+          id?: string
+          penalty_on_miss?: boolean | null
+          reminder_whatsapp?: boolean | null
+          weekly_close_weekday?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: true
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          proof_url: string | null
+          status: string
+          submitted_by: string
+          task_instance_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          proof_url?: string | null
+          status?: string
+          submitted_by: string
+          task_instance_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          proof_url?: string | null
+          status?: string
+          submitted_by?: string
+          task_instance_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_task_instance_id_fkey"
+            columns: ["task_instance_id"]
+            isOneToOne: false
+            referencedRelation: "task_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_instances: {
+        Row: {
+          created_at: string
+          daughter_id: string
+          due_date: string
+          id: string
+          status: string
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daughter_id: string
+          due_date: string
+          id?: string
+          status?: string
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daughter_id?: string
+          due_date?: string
+          id?: string
+          status?: string
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_instances_daughter_id_fkey"
+            columns: ["daughter_id"]
+            isOneToOne: false
+            referencedRelation: "daughters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_instances_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          active: boolean | null
+          attachment_required: boolean | null
+          created_at: string
+          description: string | null
+          family_id: string
+          id: string
+          recurrence: string
+          title: string
+          value_cents: number
+        }
+        Insert: {
+          active?: boolean | null
+          attachment_required?: boolean | null
+          created_at?: string
+          description?: string | null
+          family_id: string
+          id?: string
+          recurrence?: string
+          title: string
+          value_cents?: number
+        }
+        Update: {
+          active?: boolean | null
+          attachment_required?: boolean | null
+          created_at?: string
+          description?: string | null
+          family_id?: string
+          id?: string
+          recurrence?: string
+          title?: string
+          value_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          daughter_id: string
+          id: string
+          kind: string
+          memo: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          daughter_id: string
+          id?: string
+          kind: string
+          memo?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          daughter_id?: string
+          id?: string
+          kind?: string
+          memo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_daughter_id_fkey"
+            columns: ["daughter_id"]
+            isOneToOne: false
+            referencedRelation: "daughters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_daughter_profile: {
+        Args: {
+          display_name: string
+          family_id: string
+          monthly_allowance_cents?: number
+          phone?: string
+          user_id: string
+        }
+        Returns: string
+      }
+      create_family_and_parent: {
+        Args: {
+          family_name: string
+          parent_display_name: string
+          parent_phone?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
