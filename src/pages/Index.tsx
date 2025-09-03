@@ -1,6 +1,9 @@
+import { Navigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '@/hooks/use-auth';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   Users, 
   Wallet, 
@@ -13,7 +16,21 @@ import {
   Award
 } from "lucide-react";
 
-const Index = () => {
+export default function Index() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
@@ -30,10 +47,18 @@ const Index = () => {
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/auth'}
+              >
                 Entrar
               </Button>
-              <Button size="sm" className="gradient-primary text-white border-0">
+              <Button 
+                size="sm" 
+                className="gradient-primary text-white border-0"
+                onClick={() => window.location.href = '/auth'}
+              >
                 Começar Grátis
               </Button>
             </div>
@@ -64,7 +89,11 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Button size="lg" className="gradient-primary text-white border-0 shadow-primary px-8 py-6 text-lg">
+            <Button 
+              size="lg" 
+              className="gradient-primary text-white border-0 shadow-primary px-8 py-6 text-lg"
+              onClick={() => window.location.href = '/auth'}
+            >
               <Smartphone className="w-5 h-5 mr-2" />
               Baixar App Grátis
             </Button>
@@ -170,7 +199,11 @@ const Index = () => {
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Junte-se às famílias que já estão ensinando responsabilidade financeira de forma moderna
             </p>
-            <Button size="lg" className="gradient-primary text-white border-0 shadow-primary px-8 py-6 text-lg">
+            <Button 
+              size="lg" 
+              className="gradient-primary text-white border-0 shadow-primary px-8 py-6 text-lg"
+              onClick={() => window.location.href = '/auth'}
+            >
               <Users className="w-5 h-5 mr-2" />
               Criar Conta Familiar
             </Button>
@@ -199,6 +232,4 @@ const Index = () => {
       </footer>
     </div>
   );
-};
-
-export default Index;
+}
