@@ -193,11 +193,18 @@ export function ParentDashboard() {
             <CardTitle>Ações Rápidas</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <Button className="h-auto p-4 flex flex-col items-center gap-2">
+            <Button 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => window.location.href = '/tasks'}
+            >
               <Plus className="w-6 h-6" />
               <span>Nova Tarefa</span>
             </Button>
-            <Button variant="outline" className="h-auto p-4 flex flex-col items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+              onClick={() => window.location.href = '/approvals'}
+            >
               <CheckSquare className="w-6 h-6" />
               <span>Aprovar Tarefas</span>
             </Button>

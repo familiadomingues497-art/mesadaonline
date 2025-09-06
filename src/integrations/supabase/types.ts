@@ -309,6 +309,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_parent_role: {
+        Args: { family_id_param: string }
+        Returns: boolean
+      }
       create_daughter_profile: {
         Args: {
           display_name: string
