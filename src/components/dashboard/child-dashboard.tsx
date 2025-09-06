@@ -6,14 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { TaskStatusBadge } from '@/components/ui/task-status-badge';
+import { TaskSubmission } from '@/components/tasks/task-submission';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { formatBRL } from '@/lib/currency';
 import { formatDate } from '@/lib/date';
 import { Coins, CheckSquare, Clock, TrendingUp, LogOut } from 'lucide-react';
-import { TaskStatus } from '@/types';
+import { TaskStatus, TaskInstance, Transaction } from '@/types';
 
-interface TaskInstance {
+interface OldTaskInstance {
   id: string;
   due_date: string;
   status: TaskStatus;
@@ -26,7 +27,7 @@ interface TaskInstance {
   };
 }
 
-interface Transaction {
+interface OldTransaction {
   id: string;
   amount_cents: number;
   kind: string;
@@ -36,9 +37,10 @@ interface Transaction {
 
 export function ChildDashboard() {
   const { profile, daughter, signOut } = useAuth();
-  const [tasks, setTasks] = useState<TaskInstance[]>([]);
+  const [tasks, setTasks] = useState<OldTaskInstance[]>([]);
   const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<OldTransaction[]>([]);
+  const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export function ChildDashboard() {
       if (taskError) {
         console.error('Error loading tasks:', taskError);
       } else {
-        setTasks((taskData || []) as TaskInstance[]);
+        setTasks((taskData || []) as OldTaskInstance[]);
       }
 
       // Load transactions for balance calculation
@@ -101,12 +103,65 @@ export function ChildDashboard() {
     }
   };
 
+  const handleTaskClick = (task: OldTaskInstance) => {
+    if (task.status === 'pending') {
+      // Convert to the expected TaskInstance format for submission
+      const taskInstance: TaskInstance = {
+        id: task.id,
+        task_id: task.task.id,
+        daughter_id: profile?.id || '',
+        due_date: task.due_date,
+        status: task.status as any,
+        created_at: '',
+        updated_at: '',
+        task: {
+          id: task.task.id,
+          family_id: '',
+          title: task.task.title,
+          description: task.task.description || '',
+          value_cents: task.task.value_cents,
+          recurrence: 'none',
+          attachment_required: task.task.attachment_required,
+          active: true,
+        }
+      };
+      setSelectedTask(taskInstance);
+    }
+  };
+
+  const handleTaskSubmitted = () => {
+    setSelectedTask(null);
+    loadDashboardData();
+  };
+  
   const pendingTasks = tasks.filter(task => task.status === 'pending');
   const todayTasks = tasks.filter(task => {
     const dueDate = new Date(task.due_date);
     const today = new Date();
     return dueDate.toDateString() === today.toDateString() && task.status === 'pending';
   });
+
+  if (selectedTask) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-md mx-auto">
+          <div className="mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedTask(null)}
+              className="mb-4"
+            >
+              ← Voltar
+            </Button>
+          </div>
+          <TaskSubmission
+            taskInstance={selectedTask}
+            onSubmitted={handleTaskSubmitted}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -180,7 +235,10 @@ export function ChildDashboard() {
                       {formatBRL(taskInstance.task.value_cents)}
                     </p>
                   </div>
-                  <Button size="sm">
+                  <Button 
+                    size="sm"
+                    onClick={() => handleTaskClick(taskInstance)}
+                  >
                     Fazer Agora
                   </Button>
                 </div>
@@ -228,7 +286,10 @@ export function ChildDashboard() {
                   </div>
                   <div className="ml-4">
                     {taskInstance.status === 'pending' && (
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={() => handleTaskClick(taskInstance)}
+                      >
                         Completar
                       </Button>
                     )}

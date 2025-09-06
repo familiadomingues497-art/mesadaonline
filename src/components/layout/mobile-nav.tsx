@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "react-router-dom";
 import { 
   Home, 
   CheckSquare, 
@@ -7,32 +9,34 @@ import {
   BarChart3, 
   User,
   Heart,
-  Settings
+  Settings,
+  Clock
 } from "lucide-react";
 
 interface MobileNavProps {
-  activeTab?: string;
-  role?: "parent" | "child";
   className?: string;
 }
 
-export function MobileNav({ activeTab = "dashboard", role = "child", className }: MobileNavProps) {
+export function MobileNav({ className }: MobileNavProps) {
+  const { profile } = useAuth();
+  const location = useLocation();
+  
   const childTabs = [
-    { id: "dashboard", icon: Home, label: "Início" },
-    { id: "tasks", icon: CheckSquare, label: "Tarefas" },
-    { id: "wallet", icon: Wallet, label: "Carteira" },
-    { id: "profile", icon: User, label: "Perfil" }
+    { id: "dashboard", icon: Home, label: "Início", path: "/dashboard" },
+    { id: "tasks", icon: CheckSquare, label: "Tarefas", path: "/dashboard" },
+    { id: "wallet", icon: Wallet, label: "Carteira", path: "/dashboard" },
+    { id: "profile", icon: User, label: "Perfil", path: "/dashboard" }
   ];
 
   const parentTabs = [
-    { id: "dashboard", icon: Home, label: "Família" },
-    { id: "tasks", icon: CheckSquare, label: "Tarefas" },
-    { id: "daughters", icon: Heart, label: "Filhas" },
-    { id: "reports", icon: BarChart3, label: "Relatórios" },
-    { id: "settings", icon: Settings, label: "Config" }
+    { id: "dashboard", icon: Home, label: "Família", path: "/dashboard" },
+    { id: "tasks", icon: CheckSquare, label: "Tarefas", path: "/tasks" },
+    { id: "approvals", icon: Clock, label: "Aprovar", path: "/approvals" },
+    { id: "test", icon: Settings, label: "Teste", path: "/test-functions" },
   ];
 
-  const tabs = role === "parent" ? parentTabs : childTabs;
+  const tabs = profile?.role === "parent" ? parentTabs : childTabs;
+  const currentPath = location.pathname;
 
   return (
     <nav className={cn(
@@ -42,13 +46,14 @@ export function MobileNav({ activeTab = "dashboard", role = "child", className }
     )}>
       {tabs.map((tab) => {
         const Icon = tab.icon;
-        const isActive = activeTab === tab.id;
+        const isActive = currentPath === tab.path;
         
         return (
           <Button
             key={tab.id}
             variant="ghost"
             size="sm"
+            onClick={() => window.location.href = tab.path}
             className={cn(
               "h-16 flex-col gap-1 rounded-none transition-smooth",
               isActive 

@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
 import Tasks from "./pages/Tasks";
 import Approvals from "./pages/Approvals";
+import TestFunctions from "./pages/TestFunctions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['parent']}>
                   <Approvals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/test-functions" 
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <TestFunctions />
                 </ProtectedRoute>
               } 
             />

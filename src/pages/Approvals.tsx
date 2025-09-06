@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { MobileNav } from '@/components/layout/mobile-nav';
 import { useToast } from '@/hooks/use-toast';
 import { formatBRL } from '@/lib/currency';
 import { formatDistance } from 'date-fns';
@@ -149,14 +150,22 @@ export default function Approvals() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Aprovar Tarefas</h1>
-          <p className="text-muted-foreground">
-            Revise as tarefas enviadas pelas suas filhas
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Aprovar Tarefas</h1>
+            <p className="text-muted-foreground">
+              Revise as tarefas enviadas pelas suas filhas
+            </p>
+          </div>
+          <Button 
+            variant="outline"
+            onClick={() => window.location.href = '/dashboard'}
+          >
+            Voltar
+          </Button>
         </div>
 
         {/* Submissions List */}
@@ -252,6 +261,11 @@ export default function Approvals() {
             )}
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Mobile Navigation for Parents */}
+      <div className="block md:hidden">
+        <MobileNav />
       </div>
     </div>
   );

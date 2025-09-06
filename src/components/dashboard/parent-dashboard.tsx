@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { MobileNav } from '@/components/layout/mobile-nav';
 import { formatBRL } from '@/lib/currency';
 import { Users, CheckSquare, AlertCircle, TrendingUp, LogOut, Plus } from 'lucide-react';
 
@@ -133,7 +134,7 @@ export function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-50">
         <div className="flex items-center justify-between p-4">
@@ -270,6 +271,11 @@ export function ParentDashboard() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Mobile Navigation for Parents */}
+      <div className="block md:hidden">
+        <MobileNav />
+      </div>
     </div>
   );
 }

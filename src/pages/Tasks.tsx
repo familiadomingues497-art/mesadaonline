@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Badge } from '@/components/ui/badge';
+import { MobileNav } from '@/components/layout/mobile-nav';
 import { useToast } from '@/hooks/use-toast';
 import { formatBRL } from '@/lib/currency';
 import { Plus, Calendar, Edit, Trash2 } from 'lucide-react';
@@ -122,20 +123,28 @@ export default function Tasks() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">Gerenciar Tarefas</h1>
             <p className="text-muted-foreground">
               Configure tarefas e recompensas para suas filhas
             </p>
           </div>
-          <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Tarefa
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/dashboard'}
+            >
+              Voltar
+            </Button>
+            <Button onClick={() => setShowForm(!showForm)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Tarefa
+            </Button>
+          </div>
         </div>
 
         {/* Task Creation Form */}
@@ -280,6 +289,11 @@ export default function Tasks() {
             )}
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Mobile Navigation for Parents */}
+      <div className="block md:hidden">
+        <MobileNav />
       </div>
     </div>
   );
