@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
 import Tasks from "./pages/Tasks";
 import Approvals from "./pages/Approvals";
+import Family from "./pages/Family";
 import TestFunctions from "./pages/TestFunctions";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['parent']}>
                   <Approvals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/family" 
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <Family />
                 </ProtectedRoute>
               } 
             />
