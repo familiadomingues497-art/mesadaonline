@@ -200,23 +200,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const createFamily = async (familyName: string, parentDisplayName: string, phone?: string) => {
     try {
+      console.log('createFamily called with:', { familyName, parentDisplayName, phone });
+      console.log('Current user:', user);
+      console.log('User ID:', user?.id);
+
+      if (!user?.id) {
+        return { error: 'Usuário não autenticado' };
+      }
+
       const { data, error } = await supabase.rpc('create_family_and_parent', {
         family_name: familyName,
         parent_display_name: parentDisplayName,
         parent_phone: phone
       });
 
+      console.log('RPC result:', { data, error });
+
       if (error) {
+        console.error('RPC error:', error);
         return { error: error.message };
       }
 
       // Refresh profile data
-      if (user) {
-        await fetchProfile(user.id);
-      }
+      await fetchProfile(user.id);
 
       return { error: null, familyId: data };
     } catch (error: any) {
+      console.error('createFamily catch error:', error);
       return { error: error.message || 'Erro ao criar família' };
     }
   };
