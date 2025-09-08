@@ -109,6 +109,46 @@ export default function TestFunctions() {
             </CardContent>
           </Card>
 
+          {/* Seed Tasks */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Play className="w-5 h-5 text-primary" />
+                Criar Tarefas de Exemplo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Cria tarefas de exemplo para testar o sistema (arrumar cama, lavar louça, etc.)
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => runFunction('seed-tasks')}
+                  disabled={loading === 'seed-tasks'}
+                >
+                  {loading === 'seed-tasks' ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Criar Tarefas
+                    </>
+                  )}
+                </Button>
+              </div>
+              {results['seed-tasks'] && (
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-sm">
+                    <strong>Resultado:</strong> {results['seed-tasks'].message}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Handle Overdue Tasks */}
           <Card>
             <CardHeader>
