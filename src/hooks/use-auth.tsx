@@ -49,10 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
+        setProfile(null);
+        return;
+      }
+
+      if (!profileData) {
+        // No profile found - user needs to complete setup
+        setProfile(null);
+        setDaughter(null);
         return;
       }
 
@@ -64,14 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('daughters')
           .select('*')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
-        if (!daughterError) {
+        if (!daughterError && daughterData) {
           setDaughter(daughterData);
+        } else {
+          setDaughter(null);
         }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setProfile(null);
+      setDaughter(null);
     }
   };
 
