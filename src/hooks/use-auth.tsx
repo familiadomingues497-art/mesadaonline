@@ -45,11 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch user profile data
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('fetchProfile called for userId:', userId);
+      
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
+
+      console.log('Profile fetch result:', { profileData, profileError });
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
@@ -59,11 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!profileData) {
         // No profile found - user needs to complete setup
+        console.log('No profile found for user:', userId);
         setProfile(null);
         setDaughter(null);
         return;
       }
 
+      console.log('Setting profile:', profileData);
       setProfile(profileData as Profile);
 
       // If user is a child, fetch daughter data
@@ -221,8 +227,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: error.message };
       }
 
-      // Refresh profile data
-      await fetchProfile(user.id);
+      // Refresh profile data with retry logic
+      console.log('Attempting to refresh profile...');
+      let retries = 0;
+      const maxRetries = 5;
+      
+      while (retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500 * (retries + 1))); // Exponential backoff
+        await fetchProfile(user.id);
+        
+        // Check if profile was loaded (we need to get the current state)
+        const { data: profileCheck } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (profileCheck) {
+          console.log('Profile successfully loaded after', retries + 1, 'attempts');
+          break;
+        }
+        
+        retries++;
+        console.log(`Profile not loaded yet, retry ${retries}/${maxRetries}`);
+      }
 
       return { error: null, familyId: data };
     } catch (error: any) {

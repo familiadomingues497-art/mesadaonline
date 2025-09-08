@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Home } from 'lucide-react';
 
 export default function Setup() {
-  const { user, createFamily } = useAuth();
+  const { user, profile, createFamily } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -19,6 +19,14 @@ export default function Setup() {
     parentName: '',
     phone: '',
   });
+
+  // If profile is loaded, redirect to dashboard
+  useEffect(() => {
+    if (profile) {
+      console.log('Setup - Profile loaded, redirecting to dashboard');
+      navigate('/dashboard');
+    }
+  }, [profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +41,7 @@ export default function Setup() {
 
     setLoading(true);
     try {
+      console.log('Setup - Creating family...');
       const { error } = await createFamily(
         formData.familyName.trim(),
         formData.parentName.trim(),
@@ -53,7 +62,7 @@ export default function Setup() {
         description: "Sua família foi configurada com sucesso.",
       });
 
-      navigate('/dashboard');
+      // Navigation will happen automatically via useEffect when profile loads
     } catch (error) {
       console.error('Setup error:', error);
       toast({
