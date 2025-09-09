@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Calendar, AlertTriangle } from 'lucide-react';
+import { Play, Calendar, AlertTriangle, DollarSign } from 'lucide-react';
 
 export default function TestFunctions() {
   const { toast } = useToast();
@@ -65,6 +65,46 @@ export default function TestFunctions() {
 
         {/* Test Functions */}
         <div className="grid gap-6">
+          {/* Seed Tasks */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Play className="w-5 h-5 text-primary" />
+                Criar Tarefas de Exemplo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Cria tarefas de exemplo para testar o sistema (arrumar cama, lavar louça, etc.)
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => runFunction('seed-tasks')}
+                  disabled={loading === 'seed-tasks'}
+                >
+                  {loading === 'seed-tasks' ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Criando...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Criar Tarefas
+                    </>
+                  )}
+                </Button>
+              </div>
+              {results['seed-tasks'] && (
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-sm">
+                    <strong>Resultado:</strong> {results['seed-tasks'].message}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Create Task Instances */}
           <Card>
             <CardHeader>
@@ -109,41 +149,48 @@ export default function TestFunctions() {
             </CardContent>
           </Card>
 
-          {/* Seed Tasks */}
+          {/* Weekly Allowance */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Play className="w-5 h-5 text-primary" />
-                Criar Tarefas de Exemplo
+                <DollarSign className="w-5 h-5 text-primary" />
+                Processar Mesada Semanal
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Cria tarefas de exemplo para testar o sistema (arrumar cama, lavar louça, etc.)
+                Credita a mesada semanal (1/4 da mensal) para filhas em famílias configuradas 
+                para fechamento no dia atual da semana.
               </p>
               <div className="flex gap-2">
                 <Button 
-                  onClick={() => runFunction('seed-tasks')}
-                  disabled={loading === 'seed-tasks'}
+                  onClick={() => runFunction('weekly-allowance')}
+                  disabled={loading === 'weekly-allowance'}
+                  variant="outline"
                 >
-                  {loading === 'seed-tasks' ? (
+                  {loading === 'weekly-allowance' ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" />
-                      Criando...
+                      Processando...
                     </>
                   ) : (
                     <>
                       <Play className="w-4 h-4 mr-2" />
-                      Criar Tarefas
+                      Processar
                     </>
                   )}
                 </Button>
               </div>
-              {results['seed-tasks'] && (
+              {results['weekly-allowance'] && (
                 <div className="bg-muted/50 rounded-lg p-3">
                   <p className="text-sm">
-                    <strong>Resultado:</strong> {results['seed-tasks'].message}
+                    <strong>Resultado:</strong> {results['weekly-allowance'].message}
                   </p>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>Filhas processadas: {results['weekly-allowance'].processed_daughters}</p>
+                    <p>Famílias processadas: {results['weekly-allowance'].families_processed}</p>
+                    <p>Total creditado: R$ {((results['weekly-allowance'].total_credits_cents || 0) / 100).toFixed(2)}</p>
+                  </div>
                 </div>
               )}
             </CardContent>

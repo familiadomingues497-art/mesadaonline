@@ -11,7 +11,8 @@ import {
   Heart,
   Settings,
   Clock,
-  Users
+  Users,
+  Receipt
 } from "lucide-react";
 
 interface MobileNavProps {
@@ -24,7 +25,7 @@ export function MobileNav({ className }: MobileNavProps) {
   
   const childTabs = [
     { id: "dashboard", icon: Home, label: "Início", path: "/dashboard" },
-    { id: "tasks", icon: CheckSquare, label: "Tarefas", path: "/dashboard" },
+    { id: "statement", icon: Receipt, label: "Extrato", path: "/statement" },
     { id: "wallet", icon: Wallet, label: "Carteira", path: "/dashboard" },
     { id: "profile", icon: User, label: "Perfil", path: "/dashboard" }
   ];
@@ -33,7 +34,7 @@ export function MobileNav({ className }: MobileNavProps) {
     { id: "dashboard", icon: Home, label: "Família", path: "/dashboard" },
     { id: "tasks", icon: CheckSquare, label: "Tarefas", path: "/tasks" },
     { id: "approvals", icon: Clock, label: "Aprovar", path: "/approvals" },
-    { id: "family", icon: Users, label: "Membros", path: "/family" },
+    { id: "settings", icon: Settings, label: "Config", path: "/settings" },
   ];
 
   const tabs = profile?.role === "parent" ? parentTabs : childTabs;

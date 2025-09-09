@@ -12,6 +12,9 @@ import Setup from "./pages/Setup";
 import Tasks from "./pages/Tasks";
 import Approvals from "./pages/Approvals";
 import Family from "./pages/Family";
+import Statement from "./pages/Statement";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 import TestFunctions from "./pages/TestFunctions";
 import NotFound from "./pages/NotFound";
 
@@ -64,6 +67,30 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['parent']}>
                   <Family />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/statement" 
+              element={
+                <ProtectedRoute allowedRoles={['child']}>
+                  <Statement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports" 
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <Reports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <Settings />
                 </ProtectedRoute>
               } 
             />
