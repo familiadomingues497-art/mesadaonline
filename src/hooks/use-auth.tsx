@@ -47,6 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('fetchProfile called for userId:', userId);
       
+      // Add a small delay to ensure database consistency
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -57,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
-        setProfile(null);
         return;
       }
 
@@ -88,23 +90,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setProfile(null);
-      setDaughter(null);
     }
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, !!session?.user);
+        
+        if (!mounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer profile fetching with setTimeout to prevent deadlock
+        // Only fetch profile if we don't already have one for this user, or if user changed
         if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
+          // Check if we already have profile for this user
+          if (!profile || profile.id !== session.user.id) {
+            setTimeout(() => {
+              if (mounted) {
+                fetchProfile(session.user.id);
+              }
+            }, 0);
+          }
         } else {
           setProfile(null);
           setDaughter(null);
@@ -116,20 +127,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      console.log('Initial session check:', !!session?.user);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         setTimeout(() => {
-          fetchProfile(session.user.id);
+          if (mounted) {
+            fetchProfile(session.user.id);
+          }
         }, 0);
       }
       
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // Remove profile dependency to avoid infinite loops
 
   const signUp = async (email: string, password: string, displayName: string, role: UserRole, familyName?: string) => {
     try {

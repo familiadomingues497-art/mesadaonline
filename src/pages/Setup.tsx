@@ -14,19 +14,28 @@ export default function Setup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     familyName: '',
     parentName: '',
     phone: '',
   });
 
-  // If profile is loaded, redirect to dashboard
+  // Mark as mounted after component mounts
   useEffect(() => {
-    if (profile) {
+    setMounted(true);
+  }, []);
+
+  // If profile is loaded and component is fully mounted, redirect to dashboard
+  useEffect(() => {
+    if (profile && mounted) {
       console.log('Setup - Profile loaded, redirecting to dashboard');
-      navigate('/dashboard');
+      // Add a small delay to prevent navigation during render
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 100);
     }
-  }, [profile, navigate]);
+  }, [profile, navigate, mounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

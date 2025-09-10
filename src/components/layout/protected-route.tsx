@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/hooks/use-auth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,6 +15,21 @@ export function ProtectedRoute({
   requireProfile = true 
 }: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth();
+  const [waitingForProfile, setWaitingForProfile] = useState(false);
+
+  // Wait a bit for profile to load before redirecting to setup
+  useEffect(() => {
+    if (user && requireProfile && !profile && !loading) {
+      setWaitingForProfile(true);
+      const timer = setTimeout(() => {
+        setWaitingForProfile(false);
+      }, 2000); // Wait 2 seconds for profile to load
+
+      return () => clearTimeout(timer);
+    } else {
+      setWaitingForProfile(false);
+    }
+  }, [user, profile, loading, requireProfile]);
 
   console.log('ProtectedRoute - State:', { 
     user: !!user, 
@@ -21,11 +37,12 @@ export function ProtectedRoute({
     loading, 
     requireProfile, 
     allowedRoles,
-    userRole: profile?.role 
+    userRole: profile?.role,
+    waitingForProfile
   });
 
-  if (loading) {
-    console.log('ProtectedRoute - Still loading');
+  if (loading || waitingForProfile) {
+    console.log('ProtectedRoute - Still loading or waiting for profile');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
