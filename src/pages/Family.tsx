@@ -4,13 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { useToast } from '@/hooks/use-toast';
 import { formatBRL } from '@/lib/currency';
-import { Users, Plus, UserPlus, Settings, Phone } from 'lucide-react';
+import { Users, Plus, Settings, Phone } from 'lucide-react';
 
 interface FamilyMember {
   id: string;
@@ -32,15 +30,6 @@ export default function Family() {
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [daughters, setDaughters] = useState<Record<string, DaughterData>>({});
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const [addMemberLoading, setAddMemberLoading] = useState(false);
-  const [memberData, setMemberData] = useState({
-    email: '',
-    password: '',
-    displayName: '',
-    phone: '',
-    monthlyAllowance: '20000', // R$ 200.00 default
-  });
 
   useEffect(() => {
     loadFamilyData();
@@ -82,89 +71,6 @@ export default function Family() {
       console.error('Error loading family data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!memberData.email || !memberData.password || !memberData.displayName) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha email, senha e nome da filha.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setAddMemberLoading(true);
-    
-    try {
-      // First create the user account
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: memberData.email,
-        password: memberData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-          data: {
-            display_name: memberData.displayName,
-            role: 'child'
-          }
-        }
-      });
-
-      if (signUpError) {
-        toast({
-          title: "Erro ao criar conta",
-          description: signUpError.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (signUpData.user) {
-        // Create daughter profile using the database function
-        const { error: profileError } = await supabase.rpc('create_daughter_profile', {
-          user_id: signUpData.user.id,
-          family_id: profile?.family_id,
-          display_name: memberData.displayName,
-          monthly_allowance_cents: parseInt(memberData.monthlyAllowance),
-          phone: memberData.phone || null
-        });
-
-        if (profileError) {
-          toast({
-            title: "Erro ao criar perfil",
-            description: profileError.message,
-            variant: "destructive",
-          });
-          return;
-        }
-
-        toast({
-          title: "Filha adicionada!",
-          description: `${memberData.displayName} foi adicionada à família.`,
-        });
-
-        // Reset form and reload data
-        setMemberData({
-          email: '',
-          password: '',
-          displayName: '',
-          phone: '',
-          monthlyAllowance: '20000',
-        });
-        setAddMemberOpen(false);
-        loadFamilyData();
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erro inesperado",
-        description: error.message || "Erro ao adicionar membro à família.",
-        variant: "destructive",
-      });
-    } finally {
-      setAddMemberLoading(false);
     }
   };
 
@@ -214,121 +120,15 @@ export default function Family() {
               Membros da sua família
             </p>
           </div>
-          <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Filha
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <UserPlus className="w-5 h-5" />
-                  Adicionar Nova Filha
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddMember} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    value={memberData.email}
-                    onChange={(e) =>
-                      setMemberData({ ...memberData, email: e.target.value })
-                    }
-                    required
-                    disabled={addMemberLoading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Senha para a filha"
-                    value={memberData.password}
-                    onChange={(e) =>
-                      setMemberData({ ...memberData, password: e.target.value })
-                    }
-                    required
-                    disabled={addMemberLoading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Nome *</Label>
-                  <Input
-                    id="displayName"
-                    type="text"
-                    placeholder="Nome da filha"
-                    value={memberData.displayName}
-                    onChange={(e) =>
-                      setMemberData({ ...memberData, displayName: e.target.value })
-                    }
-                    required
-                    disabled={addMemberLoading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone (opcional)</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="(11) 99999-9999"
-                    value={memberData.phone}
-                    onChange={(e) =>
-                      setMemberData({ ...memberData, phone: e.target.value })
-                    }
-                    disabled={addMemberLoading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="allowance">Mesada Mensal</Label>
-                  <Input
-                    id="allowance"
-                    type="number"
-                    placeholder="20000"
-                    value={memberData.monthlyAllowance}
-                    onChange={(e) =>
-                      setMemberData({ ...memberData, monthlyAllowance: e.target.value })
-                    }
-                    disabled={addMemberLoading}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Valor em centavos (20000 = R$ 200,00)
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setAddMemberOpen(false)}
-                    className="flex-1"
-                    disabled={addMemberLoading}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="flex-1" disabled={addMemberLoading}>
-                    {addMemberLoading ? (
-                      <>
-                        <LoadingSpinner size="sm" className="mr-2" />
-                        Criando...
-                      </>
-                    ) : (
-                      'Adicionar'
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <div>
+            <Button
+              onClick={() => window.location.href = '/convites'}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Convidar Filha
+            </Button>
+          </div>
         </div>
       </header>
 

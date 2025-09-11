@@ -65,6 +65,42 @@ export type Database = {
         }
         Relationships: []
       }
+      invites: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          email: string
+          expires_at: string
+          family_id: string
+          id: string
+          role: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          email: string
+          expires_at?: string
+          family_id: string
+          id?: string
+          role?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          email?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          role?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -329,6 +365,10 @@ export type Database = {
           parent_display_name: string
           parent_phone?: string
         }
+        Returns: string
+      }
+      current_family_id: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
     }

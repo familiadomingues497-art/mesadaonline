@@ -85,59 +85,38 @@ export default function Approvals() {
 
   const handleApproval = async (submissionId: string, approved: boolean) => {
     try {
-      const { error: submissionError } = await supabase
-        .from('submissions')
-        .update({ status: approved ? 'approved' : 'rejected' })
-        .eq('id', submissionId);
+      // Use edge function for approval
+      const { data, error } = await supabase.functions.invoke('approve-submission', {
+        body: {
+          submission_id: submissionId,
+          approved: approved
+        }
+      });
 
-      if (submissionError) {
+      if (error) {
+        console.error('Error in approval function:', error);
         toast({
           title: "Erro ao processar aprovação",
-          description: submissionError.message,
+          description: error.message || "Ocorreu um erro inesperado.",
           variant: "destructive",
         });
         return;
       }
 
-      if (approved) {
-        // Find the submission to get task details
-        const submission = submissions.find(s => s.id === submissionId);
-        if (submission) {
-          // Create transaction for approved task
-          const { error: transactionError } = await supabase
-            .from('transactions')
-            .insert({
-              daughter_id: submission.task_instance.daughter_id,
-              amount_cents: submission.task_instance.task.value_cents,
-              kind: 'task_approved',
-              memo: `Tarefa aprovada: ${submission.task_instance.task.title}`,
-            });
-
-          if (transactionError) {
-            console.error('Error creating transaction:', transactionError);
-          }
-
-          // Update task instance status
-          const { error: taskError } = await supabase
-            .from('task_instances')
-            .update({ status: 'approved' })
-            .eq('id', submission.task_instance.id);
-
-          if (taskError) {
-            console.error('Error updating task instance:', taskError);
-          }
-        }
-      }
-
       toast({
         title: approved ? "Tarefa aprovada!" : "Tarefa rejeitada",
-        description: approved ? "Recompensa adicionada ao saldo." : "A tarefa foi rejeitada.",
+        description: data?.message || (approved ? "Recompensa adicionada ao saldo." : "A tarefa foi rejeitada."),
       });
 
       // Reload submissions
       loadSubmissions();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing approval:', error);
+      toast({
+        title: "Erro ao processar aprovação",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
     }
   };
 

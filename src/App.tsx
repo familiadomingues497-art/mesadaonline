@@ -15,6 +15,9 @@ import Family from "./pages/Family";
 import Statement from "./pages/Statement";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Invites from "@/pages/Invites";
+import InviteSignup from "@/pages/InviteSignup";
+import TaskInstances from "@/pages/TaskInstances";
 import TestFunctions from "./pages/TestFunctions";
 import NotFound from "./pages/NotFound";
 
@@ -62,14 +65,22 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/family" 
-              element={
-                <ProtectedRoute allowedRoles={['parent']}>
-                  <Family />
-                </ProtectedRoute>
-              } 
-            />
+        <Route path="/family" element={
+          <ProtectedRoute allowedRoles={['parent']}>
+            <Family />
+          </ProtectedRoute>
+        } />
+        <Route path="/task-instances" element={
+          <ProtectedRoute allowedRoles={['parent']}>
+            <TaskInstances />
+          </ProtectedRoute>
+        } />
+        <Route path="/convites" element={
+          <ProtectedRoute allowedRoles={['parent']}>
+            <Invites />
+          </ProtectedRoute>
+        } />
+        <Route path="/convite/:token" element={<InviteSignup />} />
             <Route 
               path="/statement" 
               element={

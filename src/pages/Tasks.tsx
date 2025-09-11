@@ -15,10 +15,12 @@ import { useToast } from '@/hooks/use-toast';
 import { formatBRL } from '@/lib/currency';
 import { Plus, Calendar, Edit, Trash2 } from 'lucide-react';
 import { Task, TaskRecurrence } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
 export default function Tasks() {
   const { profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -60,7 +62,33 @@ export default function Tasks() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile || !formData.title.trim()) return;
+    
+    if (!profile?.family_id) {
+      toast({
+        title: "Erro",
+        description: "Família não encontrada. Faça logout e login novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (profile.role !== 'parent') {
+      toast({
+        title: "Erro",
+        description: "Apenas pais podem criar tarefas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      toast({
+        title: "Erro",
+        description: "O título da tarefa é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const valueCents = Math.round(parseFloat(formData.value_cents || '0') * 100);
 
@@ -77,6 +105,7 @@ export default function Tasks() {
         });
 
       if (error) {
+        console.error('Error creating task:', error);
         toast({
           title: "Erro ao criar tarefa",
           description: error.message,
@@ -99,8 +128,13 @@ export default function Tasks() {
       });
       setShowForm(false);
       loadTasks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating task:', error);
+      toast({
+        title: "Erro ao criar tarefa",
+        description: error.message || "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -143,6 +177,10 @@ export default function Tasks() {
             <Button onClick={() => setShowForm(!showForm)}>
               <Plus className="w-4 h-4 mr-2" />
               Nova Tarefa
+            </Button>
+            <Button onClick={() => navigate('/task-instances')}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Atribuir Tarefas
             </Button>
           </div>
         </div>
