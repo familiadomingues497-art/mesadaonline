@@ -26,7 +26,7 @@ interface AuthContextType {
   profile: Profile | null;
   daughter: Daughter | null;
   loading: boolean;
-  signUp: (email: string, password: string, displayName: string, role: UserRole, familyName?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, displayName: string, role: UserRole, familyName?: string, phone?: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   createFamily: (familyName: string, parentDisplayName: string, phone?: string) => Promise<{ error: string | null; familyId?: string }>;
@@ -150,7 +150,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []); // Remove profile dependency to avoid infinite loops
 
-  const signUp = async (email: string, password: string, displayName: string, role: UserRole, familyName?: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    displayName: string, 
+    role: UserRole, 
+    familyName?: string,
+    phone?: string
+  ) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -176,6 +183,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Conta criada!",
           description: "Verifique seu email para confirmar sua conta.",
         });
+        return { error: null };
+      }
+
+      // If parent and session exists (email confirmation disabled), create family immediately
+      if (role === 'parent' && familyName && data.session) {
+        console.log('Parent signup - creating family...');
+        const { error: familyError } = await createFamily(familyName, displayName, phone);
+        if (familyError) {
+          console.error('Family creation error:', familyError);
+          return { error: `Conta criada mas erro ao configurar família: ${familyError}` };
+        }
+        console.log('Family created successfully');
       }
 
       return { error: null };

@@ -58,8 +58,8 @@ export function ProtectedRoute({
 
   // Profile required but not loaded yet
   if (requireProfile && !profile) {
-    console.log('ProtectedRoute - No profile, redirecting to /setup');
-    return <Navigate to="/setup" replace />;
+    console.log('ProtectedRoute - No profile, redirecting to /auth');
+    return <Navigate to="/auth" replace />;
   }
 
   // Check role permissions

@@ -371,6 +371,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_family_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_family_parent: {
+        Args: { _family_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

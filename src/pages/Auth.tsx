@@ -29,9 +29,6 @@ export default function Auth() {
   const [familyName, setFamilyName] = useState('');
   const [phone, setPhone] = useState('');
 
-  // Show setup flow after parent signup
-  const [showFamilySetup, setShowFamilySetup] = useState(false);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -98,7 +95,7 @@ export default function Auth() {
     }
 
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, displayName, role, familyName);
+    const { error } = await signUp(signupEmail, signupPassword, displayName, role, familyName, phone);
     setIsLoading(false);
 
     if (error) {
@@ -107,84 +104,15 @@ export default function Auth() {
         description: error,
         variant: "destructive",
       });
-    } else if (role === 'parent') {
-      setShowFamilySetup(true);
-    }
-  };
-
-  const handleFamilySetup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const { error } = await createFamily(familyName, displayName, phone);
-    setIsLoading(false);
-
-    if (error) {
-      toast({
-        title: "Erro na configuração",
-        description: error,
-        variant: "destructive",
-      });
     } else {
       toast({
-        title: "Família criada!",
-        description: "Sua família foi configurada com sucesso.",
+        title: "Conta criada!",
+        description: role === 'parent' 
+          ? "Sua família foi configurada com sucesso. Redirecionando..." 
+          : "Aguarde o convite para acessar a família.",
       });
-      setShowFamilySetup(false);
     }
   };
-
-  if (showFamilySetup) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 gradient-bg">
-        <Card className="w-full max-w-md gradient-card">
-          <CardHeader className="text-center">
-            <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <CardTitle className="text-2xl">Configure sua Família</CardTitle>
-            <CardDescription>
-              Complete as informações para finalizar sua conta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleFamilySetup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="family-name">Nome da Família *</Label>
-                <Input
-                  id="family-name"
-                  type="text"
-                  value={familyName}
-                  onChange={(e) => setFamilyName(e.target.value)}
-                  placeholder="Ex: Família Silva"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone (opcional)</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !familyName.trim()}
-              >
-                {isLoading ? <LoadingSpinner /> : "Finalizar Configuração"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 gradient-bg">
@@ -281,17 +209,30 @@ export default function Auth() {
                 </div>
 
                 {role === 'parent' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="family-name">Nome da Família</Label>
-                    <Input
-                      id="family-name"
-                      type="text"
-                      value={familyName}
-                      onChange={(e) => setFamilyName(e.target.value)}
-                      placeholder="Ex: Família Silva"
-                      required
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="family-name">Nome da Família *</Label>
+                      <Input
+                        id="family-name"
+                        type="text"
+                        value={familyName}
+                        onChange={(e) => setFamilyName(e.target.value)}
+                        placeholder="Ex: Família Silva"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone (opcional)</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div className="space-y-2">
