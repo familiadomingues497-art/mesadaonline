@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state change:', event, !!session?.user);
         
         if (!mounted) return;
@@ -106,44 +106,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only fetch profile if we don't already have one for this user, or if user changed
+        // Only fetch profile if we have a user
         if (session?.user) {
-          // Check if we already have profile for this user
-          if (!profile || profile.id !== session.user.id) {
-            setTimeout(async () => {
-              if (mounted) {
-                await fetchProfile(session.user.id);
-                
-                // After fetching, check if profile was created
-                // If not and user is supposed to be a parent, create family
-                const { data: profileCheck } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', session.user.id)
-                  .maybeSingle();
-                
-                if (!profileCheck && session.user.user_metadata) {
-                  const role = session.user.user_metadata.role;
-                  const familyName = session.user.user_metadata.family_name;
-                  const displayName = session.user.user_metadata.display_name;
-                  
-                  if (role === 'parent' && familyName) {
-                    console.log('Creating family after email confirmation...');
-                    const { data, error } = await supabase.rpc('create_family_and_parent', {
-                      family_name: familyName,
-                      parent_display_name: displayName,
-                      parent_phone: null
-                    });
+          // Defer Supabase calls with setTimeout to avoid deadlock
+          setTimeout(() => {
+            if (!mounted) return;
+            
+            fetchProfile(session.user.id).then(() => {
+              // After fetching, check if we need to create family
+              supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle()
+                .then(({ data: profileCheck }) => {
+                  if (!profileCheck && session.user.user_metadata) {
+                    const role = session.user.user_metadata.role;
+                    const familyName = session.user.user_metadata.family_name;
+                    const displayName = session.user.user_metadata.display_name;
                     
-                    if (!error) {
-                      console.log('Family created, refreshing profile...');
-                      setTimeout(() => fetchProfile(session.user.id), 500);
+                    if (role === 'parent' && familyName) {
+                      console.log('Creating family after email confirmation...');
+                      supabase.rpc('create_family_and_parent', {
+                        family_name: familyName,
+                        parent_display_name: displayName,
+                        parent_phone: null
+                      }).then(({ data, error }) => {
+                        if (!error) {
+                          console.log('Family created, refreshing profile...');
+                          setTimeout(() => fetchProfile(session.user.id), 500);
+                        } else {
+                          console.error('Error creating family:', error);
+                        }
+                      });
                     }
                   }
-                }
-              }
-            }, 0);
-          }
+                });
+            });
+          }, 0);
         } else {
           setProfile(null);
           setDaughter(null);
