@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state change:', event, !!session?.user);
         
         if (!mounted) return;
@@ -110,9 +110,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Check if we already have profile for this user
           if (!profile || profile.id !== session.user.id) {
-            setTimeout(() => {
+            setTimeout(async () => {
               if (mounted) {
-                fetchProfile(session.user.id);
+                await fetchProfile(session.user.id);
+                
+                // After fetching, check if profile was created
+                // If not and user is supposed to be a parent, create family
+                const { data: profileCheck } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .maybeSingle();
+                
+                if (!profileCheck && session.user.user_metadata) {
+                  const role = session.user.user_metadata.role;
+                  const familyName = session.user.user_metadata.family_name;
+                  const displayName = session.user.user_metadata.display_name;
+                  
+                  if (role === 'parent' && familyName) {
+                    console.log('Creating family after email confirmation...');
+                    const { data, error } = await supabase.rpc('create_family_and_parent', {
+                      family_name: familyName,
+                      parent_display_name: displayName,
+                      parent_phone: null
+                    });
+                    
+                    if (!error) {
+                      console.log('Family created, refreshing profile...');
+                      setTimeout(() => fetchProfile(session.user.id), 500);
+                    }
+                  }
+                }
               }
             }, 0);
           }
@@ -159,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone?: string
   ) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -179,10 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user && !data.session) {
-        toast({
-          title: "Conta criada!",
-          description: "Verifique seu email para confirmar sua conta.",
-        });
+        // Email confirmation is enabled - user needs to check their email
         return { error: null };
       }
 
@@ -195,6 +220,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { error: `Conta criada mas erro ao configurar família: ${familyError}` };
         }
         console.log('Family created successfully');
+        
+        toast({
+          title: "Bem-vindo!",
+          description: "Sua família foi configurada com sucesso.",
+        });
       }
 
       return { error: null };

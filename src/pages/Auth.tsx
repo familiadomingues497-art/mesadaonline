@@ -105,11 +105,11 @@ export default function Auth() {
         variant: "destructive",
       });
     } else {
+      // Success message - check if email confirmation is needed
       toast({
-        title: "Conta criada!",
-        description: role === 'parent' 
-          ? "Sua família foi configurada com sucesso. Redirecionando..." 
-          : "Aguarde o convite para acessar a família.",
+        title: "Cadastro realizado!",
+        description: "Verifique seu email para confirmar sua conta e acessar o sistema.",
+        duration: 6000,
       });
     }
   };
