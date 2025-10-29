@@ -124,17 +124,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     const role = session.user.user_metadata.role;
                     const familyName = session.user.user_metadata.family_name;
                     const displayName = session.user.user_metadata.display_name;
+                    const phone = session.user.user_metadata.phone;
                     
                     if (role === 'parent' && familyName) {
                       console.log('Creating family after email confirmation...');
                       supabase.rpc('create_family_and_parent', {
                         family_name: familyName,
                         parent_display_name: displayName,
-                        parent_phone: null
+                        parent_phone: phone || null
                       }).then(({ data, error }) => {
                         if (!error) {
                           console.log('Family created, refreshing profile...');
-                          setTimeout(() => fetchProfile(session.user.id), 500);
+                          // Multiple retries to ensure profile is loaded
+                          let retries = 0;
+                          const maxRetries = 5;
+                          const retryFetch = () => {
+                            fetchProfile(session.user.id).then(() => {
+                              supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', session.user.id)
+                                .maybeSingle()
+                                .then(({ data: checkAgain }) => {
+                                  if (!checkAgain && retries < maxRetries) {
+                                    retries++;
+                                    console.log(`Profile not ready, retry ${retries}/${maxRetries}`);
+                                    setTimeout(retryFetch, 1000 * retries);
+                                  } else if (checkAgain) {
+                                    console.log('Profile loaded successfully!');
+                                  }
+                                });
+                            });
+                          };
+                          retryFetch();
                         } else {
                           console.error('Error creating family:', error);
                         }
@@ -187,7 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone?: string
   ) => {
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      // Redirect to setup page after email confirmation
+      const redirectUrl = `${window.location.origin}/setup`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -197,7 +220,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             display_name: displayName,
             role: role,
-            family_name: familyName
+            family_name: familyName,
+            phone: phone
           }
         }
       });
@@ -211,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: null };
       }
 
-      // If parent and session exists (email confirmation disabled), create family immediately
+      // If session exists immediately (email confirmation disabled), create family
       if (role === 'parent' && familyName && data.session) {
         console.log('Parent signup - creating family...');
         const { error: familyError } = await createFamily(familyName, displayName, phone);

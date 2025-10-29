@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Setup from "./pages/Setup";
 import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import Approvals from "./pages/Approvals";
@@ -32,8 +33,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/setup" element={<Setup />} />
             <Route
-              path="/dashboard" 
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />

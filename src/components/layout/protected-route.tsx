@@ -17,13 +17,13 @@ export function ProtectedRoute({
   const { user, profile, loading } = useAuth();
   const [waitingForProfile, setWaitingForProfile] = useState(false);
 
-  // Wait a bit for profile to load before redirecting to setup
+  // Wait a bit for profile to load before redirecting
   useEffect(() => {
     if (user && requireProfile && !profile && !loading) {
       setWaitingForProfile(true);
       const timer = setTimeout(() => {
         setWaitingForProfile(false);
-      }, 2000); // Wait 2 seconds for profile to load
+      }, 3000); // Wait 3 seconds for profile to load
 
       return () => clearTimeout(timer);
     } else {
@@ -56,10 +56,10 @@ export function ProtectedRoute({
     return <Navigate to="/auth" replace />;
   }
 
-  // Profile required but not loaded yet
+  // Profile required but not loaded yet - redirect to setup page
   if (requireProfile && !profile) {
-    console.log('ProtectedRoute - No profile, redirecting to /auth');
-    return <Navigate to="/auth" replace />;
+    console.log('ProtectedRoute - No profile, redirecting to /setup');
+    return <Navigate to="/setup" replace />;
   }
 
   // Check role permissions
