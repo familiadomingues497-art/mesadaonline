@@ -10,6 +10,7 @@ export default function Setup() {
   const { user, profile, loading } = useAuth();
   const [setupStatus, setSetupStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -17,7 +18,7 @@ export default function Setup() {
         setSetupStatus('success');
         // Redirect after showing success
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          setShouldRedirect(true);
         }, 1500);
       } else if (user) {
         // Still waiting for profile creation
@@ -33,6 +34,10 @@ export default function Setup() {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (shouldRedirect && profile) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   if (loading) {
