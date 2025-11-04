@@ -50,16 +50,19 @@ export type Database = {
       families: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           name: string
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           name: string
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
         }
@@ -109,6 +112,7 @@ export type Database = {
           id: string
           phone: string | null
           role: string
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -117,6 +121,7 @@ export type Database = {
           id: string
           phone?: string | null
           role: string
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -125,6 +130,7 @@ export type Database = {
           id?: string
           phone?: string | null
           role?: string
+          username?: string | null
         }
         Relationships: [
           {
@@ -345,10 +351,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_parent_role: {
-        Args: { family_id_param: string }
-        Returns: boolean
-      }
+      check_parent_role: { Args: { family_id_param: string }; Returns: boolean }
       create_daughter_profile: {
         Args: {
           display_name: string
@@ -367,18 +370,9 @@ export type Database = {
         }
         Returns: string
       }
-      current_family_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_family_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_family_parent: {
-        Args: { _family_id: string }
-        Returns: boolean
-      }
+      current_family_id: { Args: never; Returns: string }
+      get_user_family_id: { Args: never; Returns: string }
+      is_family_parent: { Args: { _family_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

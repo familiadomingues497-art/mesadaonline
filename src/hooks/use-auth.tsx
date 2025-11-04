@@ -11,6 +11,7 @@ export interface Profile {
   role: UserRole;
   display_name: string;
   phone?: string;
+  username?: string;
   created_at: string;
 }
 
@@ -26,7 +27,7 @@ interface AuthContextType {
   profile: Profile | null;
   daughter: Daughter | null;
   loading: boolean;
-  signUp: (email: string, password: string, displayName: string, role: UserRole, familyName?: string, phone?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, displayName: string, role: UserRole, familyName?: string, phone?: string, familyEmail?: string, username?: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   createFamily: (familyName: string, parentDisplayName: string, phone?: string) => Promise<{ error: string | null; familyId?: string }>;
@@ -125,42 +126,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     const familyName = session.user.user_metadata.family_name;
                     const displayName = session.user.user_metadata.display_name;
                     const phone = session.user.user_metadata.phone;
+                    const familyEmail = session.user.user_metadata.family_email;
+                    const username = session.user.user_metadata.username;
                     
-                    if (role === 'parent' && familyName) {
+                    if (role === 'parent' && familyName && familyEmail) {
                       console.log('Creating family after email confirmation...');
-                      supabase.rpc('create_family_and_parent', {
-                        family_name: familyName,
-                        parent_display_name: displayName,
-                        parent_phone: phone || null
-                      }).then(({ data, error }) => {
-                        if (!error) {
-                          console.log('Family created, refreshing profile...');
-                          // Multiple retries to ensure profile is loaded
-                          let retries = 0;
-                          const maxRetries = 5;
-                          const retryFetch = () => {
-                            fetchProfile(session.user.id).then(() => {
+                      
+                      // Create family with email
+                      supabase
+                        .from('families')
+                        .insert({ 
+                          name: familyName,
+                          email: familyEmail.toLowerCase().trim()
+                        })
+                        .select()
+                        .single()
+                        .then(({ data: newFamily, error: insertFamilyError }) => {
+                          if (insertFamilyError) {
+                            console.error('Error creating family:', insertFamilyError);
+                            return;
+                          }
+
+                          // Create profile
+                          supabase
+                            .from('profiles')
+                            .insert({
+                              id: session.user.id,
+                              family_id: newFamily.id,
+                              role: 'parent',
+                              display_name: displayName,
+                              phone: phone || null,
+                              username: username?.toLowerCase() || null,
+                            })
+                            .then(({ error: profileError }) => {
+                              if (profileError) {
+                                console.error('Error creating profile:', profileError);
+                                return;
+                              }
+
+                              // Create settings
                               supabase
-                                .from('profiles')
-                                .select('*')
-                                .eq('id', session.user.id)
-                                .maybeSingle()
-                                .then(({ data: checkAgain }) => {
-                                  if (!checkAgain && retries < maxRetries) {
-                                    retries++;
-                                    console.log(`Profile not ready, retry ${retries}/${maxRetries}`);
-                                    setTimeout(retryFetch, 1000 * retries);
-                                  } else if (checkAgain) {
-                                    console.log('Profile loaded successfully!');
-                                  }
+                                .from('settings')
+                                .insert({ family_id: newFamily.id })
+                                .then(() => {
+                                  console.log('Family created, refreshing profile...');
+                                  // Multiple retries to ensure profile is loaded
+                                  let retries = 0;
+                                  const maxRetries = 5;
+                                  const retryFetch = () => {
+                                    fetchProfile(session.user.id).then(() => {
+                                      supabase
+                                        .from('profiles')
+                                        .select('*')
+                                        .eq('id', session.user.id)
+                                        .maybeSingle()
+                                        .then(({ data: checkAgain }) => {
+                                          if (!checkAgain && retries < maxRetries) {
+                                            retries++;
+                                            console.log(`Profile not ready, retry ${retries}/${maxRetries}`);
+                                            setTimeout(retryFetch, 1000 * retries);
+                                          } else if (checkAgain) {
+                                            console.log('Profile loaded successfully!');
+                                          }
+                                        });
+                                    });
+                                  };
+                                  retryFetch();
                                 });
                             });
-                          };
-                          retryFetch();
-                        } else {
-                          console.error('Error creating family:', error);
-                        }
-                      });
+                        });
                     }
                   }
                 });
@@ -201,18 +235,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []); // Remove profile dependency to avoid infinite loops
 
   const signUp = async (
-    email: string, 
-    password: string, 
-    displayName: string, 
-    role: UserRole, 
+    email: string,
+    password: string,
+    displayName: string,
+    role: UserRole,
     familyName?: string,
-    phone?: string
+    phone?: string,
+    familyEmail?: string,
+    username?: string
   ) => {
     try {
       // Redirect to setup page after email confirmation
       const redirectUrl = `${window.location.origin}/setup`;
       
-      const { data, error } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -221,28 +257,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             display_name: displayName,
             role: role,
             family_name: familyName,
-            phone: phone
+            phone: phone,
+            family_email: familyEmail,
+            username: username,
           }
         }
       });
 
-      if (error) {
-        return { error: error.message };
+      if (authError) {
+        return { error: authError.message };
       }
 
-      if (data.user && !data.session) {
+      if (authData.user && !authData.session) {
         // Email confirmation is enabled - user needs to check their email
         return { error: null };
       }
 
       // If session exists immediately (email confirmation disabled), create family
-      if (role === 'parent' && familyName && data.session) {
+      if (role === 'parent' && familyName && familyEmail && authData.session) {
         console.log('Parent signup - creating family...');
-        const { error: familyError } = await createFamily(familyName, displayName, phone);
-        if (familyError) {
-          console.error('Family creation error:', familyError);
-          return { error: `Conta criada mas erro ao configurar família: ${familyError}` };
+        
+        // Create family with email
+        const { data: newFamily, error: insertFamilyError } = await supabase
+          .from('families')
+          .insert({ 
+            name: familyName,
+            email: familyEmail.toLowerCase().trim()
+          })
+          .select()
+          .single();
+
+        if (insertFamilyError) {
+          console.error('Error creating family:', insertFamilyError);
+          return { error: `Erro ao criar família: ${insertFamilyError.message}` };
         }
+
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            family_id: newFamily.id,
+            role: 'parent',
+            display_name: displayName,
+            phone: phone || null,
+            username: username?.toLowerCase() || null,
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          return { error: `Erro ao criar perfil: ${profileError.message}` };
+        }
+
+        // Create settings
+        await supabase
+          .from('settings')
+          .insert({ family_id: newFamily.id });
+
         console.log('Family created successfully');
         
         toast({
